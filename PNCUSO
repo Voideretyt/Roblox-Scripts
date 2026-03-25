@@ -1,0 +1,158 @@
+local CoreGui = game:GetService("CoreGui")
+
+-- Cleanup old GUI
+if CoreGui:FindFirstChild("XenoModernTCG") then CoreGui.XenoModernTCG:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local LeftPanel = Instance.new("Frame")
+local RightPanel = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local CodeBox = Instance.new("TextBox")
+local BulkBtn = Instance.new("TextButton")
+local ClearBtn = Instance.new("TextButton")
+
+ScreenGui.Name = "XenoModernTCG"
+ScreenGui.Parent = CoreGui
+
+-- Main Container
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 600, 0, 420)
+MainFrame.Active = true
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(60, 60, 60)
+
+-- Title & Header
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "POKÉMON NEON HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+
+-- Code Box
+CodeBox.Parent = MainFrame
+CodeBox.PlaceholderText = "Code: ???"
+CodeBox.Size = UDim2.new(0, 120, 0, 30)
+CodeBox.Position = UDim2.new(0, 20, 0, 60)
+CodeBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+CodeBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", CodeBox)
+
+-- Bulk Toggle
+BulkBtn.Parent = MainFrame
+BulkBtn.Size = UDim2.new(0, 100, 0, 30)
+BulkBtn.Position = UDim2.new(0, 150, 0, 60)
+BulkBtn.Text = "BULK: OFF"
+BulkBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+BulkBtn.TextColor3 = Color3.new(1,1,1)
+BulkBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", BulkBtn)
+
+-- Clear Inv Button
+ClearBtn.Parent = MainFrame
+ClearBtn.Size = UDim2.new(0, 100, 0, 30)
+ClearBtn.Position = UDim2.new(1, -120, 0, 60)
+ClearBtn.Text = "CLEAR INV"
+ClearBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+ClearBtn.TextColor3 = Color3.new(1,1,1)
+ClearBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", ClearBtn)
+
+-- Panels
+LeftPanel.Parent = MainFrame
+LeftPanel.Position = UDim2.new(0, 20, 0, 110)
+LeftPanel.Size = UDim2.new(0, 260, 0, 290)
+LeftPanel.BackgroundTransparency = 1
+
+RightPanel.Parent = MainFrame
+RightPanel.Position = UDim2.new(1, -280, 0, 110)
+RightPanel.Size = UDim2.new(0, 260, 0, 290)
+RightPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Instance.new("UICorner", RightPanel)
+
+local InvScroll = Instance.new("ScrollingFrame", RightPanel)
+InvScroll.Size = UDim2.new(1, -10, 1, -10)
+InvScroll.Position = UDim2.new(0, 5, 0, 5)
+InvScroll.BackgroundTransparency = 1
+InvScroll.ScrollBarThickness = 2
+InvScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Instance.new("UIListLayout", InvScroll).Padding = UDim.new(0, 4)
+
+local PackScroll = Instance.new("ScrollingFrame", LeftPanel)
+PackScroll.Size = UDim2.new(1, 0, 1, 0)
+PackScroll.BackgroundTransparency = 1
+PackScroll.ScrollBarThickness = 0
+PackScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Instance.new("UIListLayout", PackScroll).Padding = UDim.new(0, 10)
+
+-- Core Logic
+local inventory = {}
+local bulkActive = false
+
+BulkBtn.MouseButton1Click:Connect(function()
+    bulkActive = not bulkActive
+    BulkBtn.Text = bulkActive and "BULK: ON" or "BULK: OFF"
+    BulkBtn.BackgroundColor3 = bulkActive and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(40, 40, 40)
+end)
+
+ClearBtn.MouseButton1Click:Connect(function()
+    inventory = {}
+    for _, v in pairs(InvScroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
+end)
+
+local regions = {
+    {Name = "Kanto", Col = Color3.fromRGB(220, 60, 60), Pool = {C={"Pikachu", "Eevee"}, R={"Charizard"}, U={"Mewtwo"}, S={"Mew"}}},
+    {Name = "Sinnoh", Col = Color3.fromRGB(100, 80, 200), Pool = {C={"Bidoof", "Piplup"}, R={"Lucario"}, U={"Dialga"}, S={"Arceus"}}},
+    {Name = "Paldea", Col = Color3.fromRGB(180, 50, 255), Pool = {C={"Fuecoco", "Pawmi"}, R={"Tinkaton"}, U={"Miraidon"}, S={"Terapagos"}}}
+}
+
+local function addToInv(pokemon, rarity)
+    inventory[pokemon] = (inventory[pokemon] or 0) + 1
+    
+    local item = Instance.new("TextLabel", InvScroll)
+    item.Size = UDim2.new(1, 0, 0, 25)
+    item.Text = string.format("[%s] %s (x%d)", rarity, pokemon, inventory[pokemon])
+    item.BackgroundTransparency = 1
+    item.TextColor3 = rarity == "SECRET" and Color3.new(1, 0.8, 0) or Color3.new(1,1,1)
+    item.Font = Enum.Font.Gotham
+    item.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+local function roll(pool)
+    local admin = (CodeBox.Text == "123")
+    local rng = admin and math.random(1, 50) or math.random(1, 1000)
+    if rng < 10 then return pool.S[math.random(1, #pool.S)], "SECRET"
+    elseif rng < 80 then return pool.U[math.random(1, #pool.U)], "ULTRA"
+    elseif rng < 300 then return pool.R[math.random(1, #pool.R)], "RARE"
+    else return pool.C[math.random(1, #pool.C)], "Common" end
+end
+
+for _, data in pairs(regions) do
+    local b = Instance.new("TextButton", PackScroll)
+    b.Size = UDim2.new(1, 0, 0, 45)
+    b.BackgroundColor3 = data.Col
+    b.Text = data.Name:upper() .. " PACK"
+    b.Font = Enum.Font.GothamBold
+    b.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", b)
+    
+    b.MouseButton1Click:Connect(function()
+        local limit = bulkActive and 10 or 1
+        local opened = 0
+        
+        while opened < limit do
+            local card, rar = roll(data.Pool)
+            -- Duplicate Control: If bulk is on, only keep if we have less than 2
+            if not bulkActive or (inventory[card] or 0) < 2 then
+                addToInv(card, rar)
+                opened = opened + 1
+            end
+            task.wait() -- Small wait to prevent crashing during heavy rolling
+        end
+    end)
+end
