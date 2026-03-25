@@ -1,0 +1,217 @@
+if game:GetService('CoreGui'):FindFirstChild('KingScript') then
+    game:GetService('CoreGui').KingScript:Destroy()
+end
+
+
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+
+local Window = Library:CreateWindow({
+    Title = "Gunfight Arena",
+    Footer = "MADE BY VTX",
+    ShowCustomCursor = true,
+})
+
+
+local Tabs = {
+    Guns = Window:AddTab("Weapons", "gun"),
+    Camos = Window:AddTab("Camos", "paintbrush"),
+    Settings = Window:AddTab("Settings", "settings"),
+}
+
+
+local Weapons = {}
+for _, weapon in pairs(game:GetService('ReplicatedStorage').Weapons:GetChildren()) do
+    table.insert(Weapons, weapon.Name)
+end
+table.sort(Weapons)
+
+
+local Camos = {}
+for _, camo in pairs(game:GetService('ReplicatedStorage').Camos:GetChildren()) do
+    table.insert(Camos, camo.Name)
+end
+table.sort(Camos)
+
+
+local SelectedWeapon = Weapons[1] or "::Select Weapons::"
+local SelectedCamo = Camos[1] or "::Select Camos::"
+
+
+local WeaponsGroupBox = Tabs.Guns:AddLeftGroupbox("Weapons", "gun")
+
+
+WeaponsGroupBox:AddDropdown("WeaponsDropdown", {
+    Values = Weapons,
+    Default = 1,
+    Text = "Weapons List",
+    Tooltip = "Select a weapon to equip",
+    
+    Callback = function(Value)
+        SelectedWeapon = Value
+        print("Selected weapon:", SelectedWeapon)
+    end,
+})
+
+
+WeaponsGroupBox:AddButton({
+    Text = "Equip as Primary",
+    Func = function()
+        if SelectedWeapon and SelectedWeapon ~= "::Select Weapons::" then
+            game:GetService('Players').LocalPlayer:SetAttribute('Primary', SelectedWeapon)
+            Library:Notify({
+                Title = "Weapon Equipped",
+                Description = "Primary weapon set to: " .. SelectedWeapon,
+                Time = 3,
+            })
+        else
+            Library:Notify({
+                Title = "Error",
+                Description = "Please select a weapon first!",
+                Time = 3,
+            })
+        end
+    end,
+    Tooltip = "Equip the selected weapon as primary",
+})
+
+WeaponsGroupBox:AddButton({
+    Text = "Equip as Secondary",
+    Func = function()
+        if SelectedWeapon and SelectedWeapon ~= "::Select Weapons::" then
+            game:GetService('Players').LocalPlayer:SetAttribute('Secondary', SelectedWeapon)
+            Library:Notify({
+                Title = "Weapon Equipped",
+                Description = "Secondary weapon set to: " .. SelectedWeapon,
+                Time = 3,
+            })
+        else
+            Library:Notify({
+                Title = "Error",
+                Description = "Please select a weapon first!",
+                Time = 3,
+            })
+        end
+    end,
+    Tooltip = "Equip the selected weapon as secondary",
+})
+
+
+local CamosGroupBox = Tabs.Camos:AddLeftGroupbox("Camos", "paintbrush")
+
+
+CamosGroupBox:AddDropdown("CamosDropdown", {
+    Values = Camos,
+    Default = 1,
+    Text = "Camos List",
+    Tooltip = "Select a camo to equip",
+    
+    Callback = function(Value)
+        SelectedCamo = Value
+        print("Selected camo:", SelectedCamo)
+    end,
+})
+
+
+CamosGroupBox:AddButton({
+    Text = "Apply to Primary",
+    Func = function()
+        if SelectedCamo and SelectedCamo ~= "::Select Camos::" then
+            game:GetService('Players').LocalPlayer:SetAttribute('PrimaryCamo', SelectedCamo)
+            Library:Notify({
+                Title = "Camo Applied",
+                Description = "Primary camo set to: " .. SelectedCamo,
+                Time = 3,
+            })
+        else
+            Library:Notify({
+                Title = "Error",
+                Description = "Please select a camo first!",
+                Time = 3,
+            })
+        end
+    end,
+    Tooltip = "Apply the selected camo to primary weapon",
+})
+
+CamosGroupBox:AddButton({
+    Text = "Apply to Secondary",
+    Func = function()
+        if SelectedCamo and SelectedCamo ~= "::Select Camos::" then
+            game:GetService('Players').LocalPlayer:SetAttribute('SecondaryCamo', SelectedCamo)
+            Library:Notify({
+                Title = "Camo Applied",
+                Description = "Secondary camo set to: " .. SelectedCamo,
+                Time = 3,
+            })
+        else
+            Library:Notify({
+                Title = "Error",
+                Description = "Please select a camo first!",
+                Time = 3,
+            })
+        end
+    end,
+    Tooltip = "Apply the selected camo to secondary weapon",
+})
+
+
+local MenuGroup = Tabs.Settings:AddLeftGroupbox("Menu Settings", "settings")
+
+MenuGroup:AddToggle("ShowCustomCursor", {
+    Text = "Custom Cursor",
+    Default = true,
+    Callback = function(Value)
+        Library.ShowCustomCursor = Value
+    end,
+})
+
+MenuGroup:AddDropdown("NotificationSide", {
+    Values = { "Left", "Right" },
+    Default = "Right",
+    Text = "Notification Side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end,
+})
+
+MenuGroup:AddDivider()
+
+MenuGroup:AddLabel("Menu Keybind")
+    :AddKeyPicker("MenuKeybind", { 
+        Default = "RightShift", 
+        NoUI = true, 
+        Text = "Menu keybind" 
+    })
+
+MenuGroup:AddButton("Unload Script", function()
+    Library:Unload()
+end)
+
+
+Tabs.Guns:AddRightGroupbox("Credits"):AddLabel("VTX made this add n0t_v01t on discord if you need help :D", true)
+
+
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+
+
+SaveManager:BuildConfigSection(Tabs.Settings)
+ThemeManager:ApplyToTab(Tabs.Settings)
+
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+
+SaveManager:LoadAutoloadConfig()
+
+
+Library:Init()
